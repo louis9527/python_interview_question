@@ -32,7 +32,7 @@
         - [25.求出列表所有奇数并构造新列表](#25求出列表所有奇数并构造新列表)
         - [26.用一行python代码写出1+2+3+10248](#26用一行python代码写出12310248)
         - [27.Python中变量的作用域？（变量查找顺序)](#27python中变量的作用域变量查找顺序)
-        - [28.字符串”123″转换成123，不使用内置api，例如int（）](#28字符串123″转换成123不使用内置api例如int)
+        - [28.字符串 `"123"` 转换成 `123`，不使用内置api，例如 `int()`](#28字符串-123-转换成-123不使用内置api例如-int)
         - [29.Given an array of integers](#29given-an-array-of-integers)
         - [30.python代码实现删除一个list里面的重复元素](#30python代码实现删除一个list里面的重复元素)
         - [31.统计一个文本中单词频次最高的10个单词？](#31统计一个文本中单词频次最高的10个单词)
@@ -56,7 +56,7 @@
         - [47.Python中如何动态获取和设置对象的属性？](#47python中如何动态获取和设置对象的属性)
     - [内存管理与垃圾回收机制](#内存管理与垃圾回收机制)
         - [48.哪些操作会导致Python内存溢出，怎么处理？](#48哪些操作会导致python内存溢出怎么处理)
-        - [49.关于Python内存管理,下列说法错误的是](#49关于python内存管理下列说法错误的是)
+        - [49.关于Python内存管理,下列说法错误的是  B](#49关于python内存管理下列说法错误的是--b)
         - [50.Python的内存管理机制及调优手段？](#50python的内存管理机制及调优手段)
         - [51.内存泄露是什么？如何避免？](#51内存泄露是什么如何避免)
     - [函数](#函数)
@@ -271,7 +271,10 @@
         - [244.怎么在海量数据中找出重复次数最多的一个？](#244怎么在海量数据中找出重复次数最多的一个)
         - [245.判断数据是否在大量数据中](#245判断数据是否在大量数据中)
 
+
+
 <!-- /TOC -->
+
 # Python基础
 ## 文件操作
 ### 1.有一个jsonline格式的文件file.txt大小约为10K
@@ -290,6 +293,15 @@ def get_lines():
     with open('file.txt','rb') as f:
         for i in f:
             yield i
+```
+个人认为：还是设置下每次返回的行数较好，否则读取次数太多。
+```
+def get_lines():
+    l = []
+    with open('file.txt','rb') as f:
+      data = f.readlines(60000)
+    l.append(data)
+    yield l
 ```
 Pandaaaa906提供的方法
 ```python
@@ -352,6 +364,7 @@ print(alist)
 ```python
 sorted(d.items(),key=lambda x:x[1])
 ```
+    x[0]代表用key进行排序；x[1]代表用value进行排序。
 ### 6.字典推导式
 ```python
 d = {key:value for (key,value) in iterable}
@@ -440,6 +453,10 @@ c. Python2里面继承object的是新式类，没有写父类的是经典类
 
 d. 经典类目前在Python里基本没有应用
 
+e. 保持class与type的统一对新式类的实例执行a.__class__与type(a)的结果是一致的，对于旧式类来说就不一样了。
+
+f.对于多重继承的属性搜索顺序不一样新式类是采用广度优先搜索，旧式类采用深度优先搜索。
+
 ### 16.python中内置的数据结构有几种？
 a. 整型 int、 长整型 long、浮点型 float、 复数 complex
 
@@ -459,21 +476,24 @@ def singleton(cls):
             instances[cls] = cls(*args, **kwargs)
         return instances[cls]
     return wrapper
+    
+    
 @singleton
 class Foo(object):
     pass
 foo1 = Foo()
 foo2 = Foo()
-print foo1 is foo2 #True
+print(foo1 is foo2)  # True
 ```
 第二种方法：使用基类
 New 是真正创建实例对象的方法，所以重写基类的new 方法，以此保证创建对象的时候只生成一个实例
 ```python
 class Singleton(object):
-    def __new__(cls,*args,**kwargs):
-        if not hasattr(cls,'_instance'):
-            cls._instance = super(Singleton,cls).__new__(cls,*args,**kwargs)
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, '_instance'):
+            cls._instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
         return cls._instance
+    
     
 class Foo(Singleton):
     pass
@@ -481,23 +501,28 @@ class Foo(Singleton):
 foo1 = Foo()
 foo2 = Foo()
 
-print foo1 is foo2 #True
+print(foo1 is foo2)  # True
 ```
 第三种方法：元类，元类是用于创建类对象的类，类对象创建实例对象时一定要调用call方法，因此在调用call时候保证始终只创建一个实例即可，type是python的元类
 ```python
 class Singleton(type):
-    def __call__(cls,*args,**kwargs):
-        if not hasattr(cls,'_instance'):
-            cls._instance = super(Singleton,cls).__call__(*args,**kwargs)
+    def __call__(cls, *args, **kwargs):
+        if not hasattr(cls, '_instance'):
+            cls._instance = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instance
-```
-```python
+
+
+# Python2
 class Foo(object):
     __metaclass__ = Singleton
 
+# Python3
+class Foo(metaclass=Singleton):
+    pass
+
 foo1 = Foo()
 foo2 = Foo()
-print foo1 is foo2 #True
+print(foo1 is foo2)  # True
 
 ```
 ### 18.反转一个整数，例如-123 --> -321 
@@ -542,14 +567,14 @@ get_files("./",'.pyc')
 import os
 
 def pick(obj):
-    if ob.endswith(".pyc"):
+    if obj.endswith(".pyc"):
         print(obj)
     
 def scan_path(ph):
     file_list = os.listdir(ph)
     for obj in file_list:
         if os.path.isfile(obj):
-    pick(obj)
+            pick(obj)
         elif os.path.isdir(obj):
             scan_path(obj)
     
@@ -641,11 +666,19 @@ print(a)
 ```python
 def get_missing_letter(a):
     s1 = set("abcdefghijklmnopqrstuvwxyz")
-    s2 = set(a)
+    s2 = set(a.lower())
     ret = "".join(sorted(s1-s2))
     return ret
     
 print(get_missing_letter("python"))
+
+# other ways to generate letters
+# range("a", "z")
+# 方法一:
+import string
+letters = string.ascii_lowercase
+# 方法二:
+letters = "".join(map(chr, range(ord('a'), ord('z') + 1)))
 ```
 
 ### 23.可变类型和不可变类型
@@ -749,6 +782,17 @@ target = 9
 nums = solution.twoSum(list,target)
 print(nums)
 ```
+
+```
+
+class Solution(object):
+    def twoSum(self, nums, target):
+        for i in range(len(nums)):
+            num = target - nums[i]
+            if num in nums[i+1:]:
+                return [i, nums.index(num,i+1)]
+
+```
 给列表中的字典排序：假设有如下list对象，alist=[{"name":"a","age":20},{"name":"b","age":30},{"name":"c","age":25}],将alist中的元素按照age从大到小排序 alist=[{"name":"a","age":20},{"name":"b","age":30},{"name":"c","age":25}]
 ```python
 alist_sort = sorted(alist,key=lambda e: e.__getitem__('age'),reverse=True)
@@ -789,24 +833,34 @@ if __name__ == "__main__":
 ```python
 import re
 
+# 方法一
 def test(filepath):
     
     distone = {}
-    numTen = []
 
-    with open(filepath,"r",encoding="utf-8") as f:
+    with open(filepath) as f:
         for line in f:
-            line = re.sub("\W","",line)
+            line = re.sub("\W+", " ", line)
             lineone = line.split()
             for keyone in lineone:
                 if not distone.get(keyone):
-                    distone[keyone]=1
+                    distone[keyone] = 1
                 else:
-                    distone[keyone]+=1
-    numTen = sorted(distone.items(),key=lambda x:x[1],reverse=True)[:10]
-    numTen =[x[0]for x in numTen]
-    return numTen
+                    distone[keyone] += 1
+    num_ten = sorted(distone.items(), key=lambda x:x[1], reverse=True)[:10]
+    num_ten =[x[0] for x in num_ten]
+    return num_ten
     
+ 
+# 方法二 
+# 使用 built-in 的 Counter 里面的 most_common
+import re
+from collections import Counter
+
+
+def test2(filepath):
+    with open(filepath) as f:
+        return list(map(lambda c: c[0], Counter(re.sub("\W+", " ", f.read()).split()).most_common(10)))
 ```
 ### 32.请写出一个函数满足以下条件
 该函数的输入是一个仅包含数字的list,输出一个新的list，其中每一个元素要满足以下条件：
@@ -857,47 +911,66 @@ def loop_merge_sort(l1,l2):
         else:
             tmp.append(l2[0])
             del l2[0]
-        
+    while len(l1)>0:
+        tmp.append(l1[0])
+        del l1[0]
+    while len(l2)>0:
+        tmp.append(l2[0])
+        del l2[0]
+    return tmp
 ```
 ### 37.给定一个任意长度数组，实现一个函数
 让所有奇数都在偶数前面，而且奇数升序排列，偶数降序排序，如字符串'1982376455',变成'1355798642'
 ```python
+# 方法一
 def func1(l):
-    if isinstance(l,str):
-        l = list(l)
+    if isinstance(l, str):
         l = [int(i) for i in l]
     l.sort(reverse=True)
     for i in range(len(l)):
-        if l[i] % 2>0:
-            l.insert(0,l.pop(i))
+        if l[i] % 2 > 0:
+            l.insert(0, l.pop(i))
     print(''.join(str(e) for e in l))
 
+# 方法二
+def func2(l):
+    print("".join(sorted(l, key=lambda x: int(x) % 2 == 0 and 20 - int(x) or int(x))))
 ```
 ### 38.写一个函数找出一个整数数组中，第二大的数
 ```python
-def find_Second_large_num(num_list):
+def find_second_large_num(num_list):
     """
     找出数组第2大的数字
     """
-    #直接排序，输出倒数第二个数即可
+    # 方法一
+    # 直接排序，输出倒数第二个数即可
     tmp_list = sorted(num_list)
-    print ("Second_large_num is :",tmp_list[-2])
-    #设置两个标志位一个存储最大数一个存储次大数
-    #two 存储次大值，one存储最大值，遍历一次数组即可，先判断是否大于one，若大于将one的值给two，将num_list[i]的值给one,否则比较是否大于two,若大于直接将num_list[i]的值给two,否则pass
+    print("方法一\nSecond_large_num is :", tmp_list[-2])
+    
+    # 方法二
+    # 设置两个标志位一个存储最大数一个存储次大数
+    # two 存储次大值，one 存储最大值，遍历一次数组即可，先判断是否大于 one，若大于将 one 的值给 two，将 num_list[i] 的值给 one，否则比较是否大于two，若大于直接将 num_list[i] 的值给two，否则pass
     one = num_list[0]
     two = num_list[0]
-    for i in range(1,len(num_list)):
+    for i in range(1, len(num_list)):
         if num_list[i] > one:
             two = one
             one = num_list[i]
         elif num_list[i] > two:
             two = num_list[i]
-        else:
-            pass
-    print("Second_large_num is :",two)
+    print("方法二\nSecond_large_num is :", two)
+    
+    # 方法三
+    # 用 reduce 与逻辑符号 (and, or)
+    # 基本思路与方法二一样，但是不需要用 if 进行判断。
+    from functools import reduce
+    num = reduce(lambda ot, x: ot[1] < x and (ot[1], x) or ot[0] < x and (x, ot[1]) or ot, num_list, (0, 0))[0]
+    print("方法三\nSecond_large_num is :", num)
+    
+    
 if __name__ == '__main___':
-    num_list = [34,11,23,56,78,0,9,12,3,7,5]
-    find_Second_large_num(num_list)
+    num_list = [34, 11, 23, 56, 78, 0, 9, 12, 3, 7, 5]
+    find_second_large_num(num_list)
 ```
 ### 39.阅读一下代码他们的输出结果是什么？
 ```python
@@ -908,17 +981,23 @@ print([m(3) for m in multi()])
 正确答案是[9,9,9,9]，而不是[0,3,6,9]产生的原因是Python的闭包的后期绑定导致的，这意味着在闭包中的变量是在内部函数被调用的时候被查找的，因为，最后函数被调用的时候，for循环已经完成, i 的值最后是3,因此每一个返回值的i都是3,所以最后的结果是[9,9,9,9]
 ### 40.统计一段字符串中字符出现的次数
 ```python
+# 方法一
 def count_str(str_data):
     """定义一个字符出现次数的函数"""
     dict_str = {} 
     for i in str_data:
-        dict_str[i] = dict_str.get(i,0)+1
+        dict_str[i] = dict_str.get(i, 0) + 1
     return dict_str
 dict_str = count_str("AAABBCCAC")
 str_count_data = ""
-for k,v in dict_str.items():
-    str_count_data += k +str(v)
+for k, v in dict_str.items():
+    str_count_data += k + str(v)
 print(str_count_data)
+
+# 方法二
+from collections import Counter
+
+print("".join(map(lambda x: x[0] + str(x[1]), Counter("AAABBCCAC").most_common())))
 ```
 ### 41.super函数的具体用法和场景
 https://python3-cookbook.readthedocs.io/zh_CN/latest/c08/p07_calling_method_on_parent_class.html
@@ -989,19 +1068,107 @@ class Array:
 ### 45.介绍Cython，Pypy Cpython Numba各有什么缺点
 Cython
 ### 46.请描述抽象类和接口类的区别和联系
+
+1.抽象类： 规定了一系列的方法，并规定了必须由继承类实现的方法。由于有抽象方法的存在，所以抽象类不能实例化。可以将抽象类理解为毛坯房，门窗，墙面的样式由你自己来定，所以抽象类与作为基类的普通类的区别在于约束性更强
+
+2.接口类：与抽象类很相似，表现在接口中定义的方法，必须由引用类实现，但他与抽象类的根本区别在于用途：与不同个体间沟通的规则，你要进宿舍需要有钥匙，这个钥匙就是你与宿舍的接口，你的舍友也有这个接口，所以他也能进入宿舍，你用手机通话，那么手机就是你与他人交流的接口
+
+3.区别和关联：
+
+1.接口是抽象类的变体，接口中所有的方法都是抽象的，而抽象类中可以有非抽象方法，抽象类是声明方法的存在而不去实现它的类
+
+2.接口可以继承，抽象类不行
+
+3.接口定义方法，没有实现的代码，而抽象类可以实现部分方法
+
+4.接口中基本数据类型为static而抽象类不是
+
 ### 47.Python中如何动态获取和设置对象的属性？
+
+```python
+if hasattr(Parent, 'x'):
+    print(getattr(Parent, 'x'))
+    setattr(Parent, 'x',3)
+print(getattr(Parent,'x'))
+```
+
+
 
 ## 内存管理与垃圾回收机制
 ### 48.哪些操作会导致Python内存溢出，怎么处理？
-### 49.关于Python内存管理,下列说法错误的是
+### 49.关于Python内存管理,下列说法错误的是  B
+
+A,变量不必事先声明                                   B,变量无须先创建和赋值而直接使用
+
+C,变量无须指定类型                                   D,可以使用del释放资源
+
 ### 50.Python的内存管理机制及调优手段？
+
+内存管理机制: 引用计数、垃圾回收、内存池
+
+引用计数：引用计数是一种非常高效的内存管理手段，当一个Python对象被引用时其引用计数增加1,
+
+当其不再被一个变量引用时则计数减1,当引用计数等于0时对象被删除。弱引用不会增加引用计数
+
+垃圾回收：
+
+1.引用计数
+
+引用计数也是一种垃圾收集机制，而且也是一种最直观、最简单的垃圾收集技术。当Python的某个对象的引用计数降为0时，说明没有任何引用指向该对象，该对象就成为要被回收的垃圾了。比如某个新建对象，它被分配给某个引用，对象的引用计数变为1，如果引用被删除，对象的引用计数为0,那么该对象就可以被垃圾回收。不过如果出现循环引用的话，引用计数机制就不再起有效的作用了。
+
+2.标记清除
+
+https://foofish.net/python-gc.html
+
+调优手段
+
+1.手动垃圾回收
+
+2.调高垃圾回收阈值
+
+3.避免循环引用
+
 ### 51.内存泄露是什么？如何避免？
+
+**内存泄漏**指由于疏忽或错误造成程序未能释放已经不再使用的内存。内存泄漏并非指内存在物理上的消失，而是应用程序分配某段内存后，由于设计错误，导致在释放该段内存之前就失去了对该段内存的控制，从而造成了内存的浪费。
+
+有`__del__()`函数的对象间的循环引用是导致内存泄露的主凶。不使用一个对象时使用: del object 来删除一个对象的引用计数就可以有效防止内存泄露问题。
+
+通过Python扩展模块gc 来查看不能回收的对象的详细信息。
+
+可以通过 sys.getrefcount(obj) 来获取对象的引用计数，并根据返回值是否为0来判断是否内存泄露
 
 ## 函数
 ### 52.python常见的列表推导式？
+
+[表达式 for 变量 in 列表] 或者 [表达式 for 变量 in 列表 if  条件]
+
 ### 53.简述read、readline、readlines的区别？
+
+read                           读取整个文件
+
+readline                     读取下一行
+
+readlines                   读取整个文件到一个迭代器以供我们遍历
+
 ### 54.什么是Hash（散列函数）？
+
+**散列函数**（英语：Hash function）又称**散列算法**、**哈希函数**，是一种从任何一种数据中创建小的数字“指纹”的方法。散列函数把消息或数据压缩成摘要，使得数据量变小，将数据的格式固定下来。该函数将数据打乱混合，重新创建一个叫做**散列值**（hash values，hash codes，hash sums，或hashes）的指纹。散列值通常用一个短的随机字母和数字组成的字符串来代表
+
 ### 55.python函数重载机制？
+
+函数重载主要是为了解决两个问题。
+1。可变参数类型。
+2。可变参数个数。
+
+另外，一个基本的设计原则是，仅仅当两个函数除了参数类型和参数个数不同以外，其功能是完全相同的，此时才使用函数重载，如果两个函数的功能其实不同，那么不应当使用重载，而应当使用一个名字不同的函数。
+
+好吧，那么对于情况 1 ，函数功能相同，但是参数类型不同，python 如何处理？答案是根本不需要处理，因为 python 可以接受任何类型的参数，如果函数的功能相同，那么不同的参数类型在 python 中很可能是相同的代码，没有必要做成两个不同函数。
+
+那么对于情况 2 ，函数功能相同，但参数个数不同，python 如何处理？大家知道，答案就是缺省参数。对那些缺少的参数设定为缺省参数即可解决问题。因为你假设函数功能相同，那么那些缺少的参数终归是需要用的。
+
+好了，鉴于情况 1 跟 情况 2 都有了解决方案，python 自然就不需要函数重载了。
+
 ### 56.写一个函数找出一个整数数组中，第二大的数
 ### 57.手写一个判断时间的装饰器
 ```python
@@ -1040,27 +1207,268 @@ if __name__ == "__main__":
 list(filter(lambda x: x % 2 == 0, range(10)))
 ```
 ### 59.编写函数的4个原则
+
+1.函数设计要尽量短小
+
+2.函数声明要做到合理、简单、易于使用
+
+3.函数参数设计应该考虑向下兼容
+
+4.一个函数只做一件事情，尽量保证函数语句粒度的一致性
+
 ### 60.函数调用参数的传递方式是值传递还是引用传递？
+
+Python的参数传递有：位置参数、默认参数、可变参数、关键字参数。
+
+函数的传值到底是值传递还是引用传递、要分情况：
+
+不可变参数用值传递：像整数和字符串这样的不可变对象，是通过拷贝进行传递的，因为你无论如何都不可能在原处改变不可变对象。
+
+可变参数是引用传递：比如像列表，字典这样的对象是通过引用传递、和C语言里面的用指针传递数组很相似，可变对象能在函数内部改变。
+
 ### 61.如何在function里面设置一个全局变量
+
+```python
+globals() # 返回包含当前作用余全局变量的字典。
+global 变量 设置使用全局变量
+```
+
 ### 62.对缺省参数的理解 ？
+
+缺省参数指在调用函数的时候没有传入参数的情况下，调用默认的参数，在调用函数的同时赋值时，所传入的参数会替代默认参数。
+
+*args是不定长参数，它可以表示输入参数是不确定的，可以是任意多个。
+
+**kwargs是关键字参数，赋值的时候是以键值对的方式，参数可以是任意多对在定义函数的时候
+
+不确定会有多少参数会传入时，就可以使用两个参数
+
 ### 63.Mysql怎么限制IP访问？
+
+
+
 ### 64.带参数的装饰器?
+
+带定长参数的装饰器
+
+```python
+def new_func(func):
+    def wrappedfun(username, passwd):
+        if username == 'root' and passwd == '123456789':
+            print('通过认证')
+            print('开始执行附加功能')
+            return func()
+       	else:
+            print('用户名或密码错误')
+            return
+    return wrappedfun
+
+@new_func
+def origin():
+    print('开始执行函数')
+origin('root','123456789')
+```
+
+带不定长参数的装饰器
+
+```python
+def new_func(func):
+    def wrappedfun(*parts):
+        if parts:
+            counts = len(parts)
+            print('本系统包含 ', end='')
+            for part in parts:
+                print(part, ' ',end='')
+            print('等', counts, '部分')
+            return func()
+        else:
+            print('用户名或密码错误')
+            return func()
+   return wrappedfun
+
+```
+
 ### 65.为什么函数名字可以当做参数用?
+
+Python中一切皆对象，函数名是函数在内存中的空间，也是一个对象
+
 ### 66.Python中pass语句的作用是什么？
+
+在编写代码时只写框架思路，具体实现还未编写就可以用pass进行占位，是程序不报错，不会进行任何操作。
+
 ### 67.有这样一段代码，print c会输出什么，为什么？
+
+```python
+a = 10
+b = 20
+c = [a]
+a = 15
+```
+
+答：10对于字符串，数字，传递是相应的值
+
+
+
 ### 68.交换两个变量的值？
+
+```python
+a, b = b, a
+```
+
+
+
 ### 69.map函数和reduce函数？
+
+```python
+map(lambda x: x * x, [1, 2, 3, 4])   # 使用 lambda
+# [1, 4, 9, 16]
+reduce(lambda x, y: x * y, [1, 2, 3, 4])  # 相当于 ((1 * 2) * 3) * 4
+# 24
+```
+
+
+
 ### 70.回调函数，如何通信的?
+
+回调函数是把函数的指针(地址)作为参数传递给另一个函数，将整个函数当作一个对象，赋值给调用的函数。
+
 ### 71.Python主要的内置数据类型都有哪些？ print dir( ‘a ’) 的输出？
+
+内建类型：布尔类型，数字，字符串，列表，元组，字典，集合
+
+输出字符串'a'的内建方法
+
 ### 72.map(lambda x:xx，[y for y in range(3)])的输出？
+
+```
+[0, 1, 4]
+```
+
 ### 73.hasattr() getattr() setattr() 函数使用详解？
+
+hasattr(object,name)函数:
+
+判断一个对象里面是否有name属性或者name方法，返回bool值，有name属性（方法）返回True，否则返回False。
+
+```python
+class function_demo(object):
+    name = 'demo'
+    def run(self):
+        return "hello function"
+functiondemo = function_demo()
+res = hasattr(functiondemo, "name") # 判断对象是否有name属性，True
+res = hasattr(functiondemo, "run") # 判断对象是否有run方法，True
+res = hasattr(functiondemo, "age") # 判断对象是否有age属性，False
+print(res)
+```
+
+getattr(object, name[,default])函数：
+
+获取对象object的属性或者方法，如果存在则打印出来，如果不存在，打印默认值，默认值可选。注意：如果返回的是对象的方法，则打印结果是：方法的内存地址，如果需要运行这个方法，可以在后面添加括号().
+
+```python
+functiondemo = function_demo()
+getattr(functiondemo, "name")# 获取name属性，存在就打印出来 --- demo
+getattr(functiondemo, "run") # 获取run 方法，存在打印出方法的内存地址
+getattr(functiondemo, "age") # 获取不存在的属性，报错
+getattr(functiondemo, "age", 18)# 获取不存在的属性，返回一个默认值
+```
+
+setattr(object, name, values)函数：
+
+给对象的属性赋值，若属性不存在，先创建再赋值
+
+```python
+class function_demo(object):
+    name = "demo"
+    def run(self):
+        return "hello function"
+functiondemo = function_demo()
+res = hasattr(functiondemo, "age") # 判断age属性是否存在，False
+print(res)
+setattr(functiondemo, "age", 18) # 对age属性进行赋值，无返回值
+res1 = hasattr(functiondemo, "age") # 再次判断属性是否存在，True
+```
+
+综合使用
+
+```python
+class function_demo(object):
+    name = "demo"
+    def run(self):
+        return "hello function"
+functiondemo = function_demo()
+res = hasattr(functiondemo, "addr") # 先判断是否存在
+if res:
+    addr = getattr(functiondemo, "addr")
+    print(addr)
+else:
+    addr = getattr(functiondemo, "addr", setattr(functiondemo, "addr", "北京首都"))
+    print(addr)
+```
+
+
+
 ### 74.一句话解决阶乘函数？
+
+```
+reduce(lambda x,y : x*y,range(1,n+1))
+```
+
+
+
 ### 75.什么是lambda函数？ 有什么好处？
+
+lambda 函数是一个可以接收任意多个参数(包括可选参数)并且返回单个表达式值的函数
+
+1.lambda函数比较轻便，即用即仍，很适合需要完成一项功能，但是此功能只在此一处使用，连名字都很随意的情况下
+
+2.匿名函数，一般用来给filter，map这样的函数式编程服务
+
+3.作为回调函数，传递给某些应用，比如消息处理
+
 ### 76.递归函数停止的条件？
+
+递归的终止条件一般定义在递归函数内部，在递归调用前要做一个条件判断，根据判断的结果选择是继续调用自身，还是return，，返回终止递归。
+
+终止的条件：判断递归的次数是否达到某一限定值
+
+2.判断运算的结果是否达到某个范围等，根据设计的目的来选择
+
 ### 77.下面这段代码的输出结果将是什么？请解释。
+
+```python
+def multipliers():
+    return [lambda x: i *x for i in range(4)]
+	print([m(2) for m in multipliers()])
+
+```
+
+上面代码的输出结果是[6,6,6,6]，不是我们想的[0,2,4,6]
+
+你如何修改上面的multipliers的定义产生想要的结果？
+
+上述问题产生的原因是python闭包的延迟绑定。这意味着内部函数被调用时，参数的值在闭包内进行查找。因此，当任何由multipliers()返回的函数被调用时,i的值将在附近的范围进行查找。那时，不管返回的函数是否被调用，for循环已经完成，i被赋予了最终的值3.
+
+```python
+def multipliers():
+    for i in range(4):
+        yield lambda x: i *x
+```
+
+```python
+def multipliers():
+    return [lambda x,i = i: i*x for i in range(4)]
+
+```
+
+
+
+
+
 ### 78.什么是lambda函数？它有什么好处？写一个匿名函数求两个数的和
 
-
+lambda函数是匿名函数，使用lambda函数能创建小型匿名函数，这种函数得名于省略了用def声明函数的标准步骤
 
 
 ##  设计模式
@@ -1137,23 +1545,192 @@ print ([[x for x in range(1,100)] [i:i+3] for i in range(0,100,3)])
 yield就是保存当前程序执行状态。你用for循环的时候，每次取一个元素的时候就会计算一次。用yield的函数叫generator,和iterator一样，它的好处是不用一次计算所有元素，而是用一次算一次，可以节省很多空间，generator每次计算需要上一次计算结果，所以用yield,否则一return，上次计算结果就没了
 ## 面向对象
 ### 90.Python中的可变对象和不可变对象？
+
+不可变对象，该对象所指向的内存中的值不能被改变。当改变某个变量时候，由于其所指的值不能被改变，相当于把原来的值复制一份后再改变，这会开辟一个新的地址，变量再指向这个新的地址。
+
+可变对象，该对象所指向的内存中的值可以被改变。变量（准确的说是引用）改变后，实际上其所指的值直接发生改变，并没有发生复制行为，也没有开辟出新的地址，通俗点说就是原地改变。
+
+Pyhton中，数值类型(int 和float)，字符串str、元祖tuple都是不可变类型。而列表list、字典dict、集合set是可变类型
+
 ### 91.Python的魔法方法
+
+魔法方法就是可以给你的类增加魔力的特殊方法，如果你的对象实现（重载）了这些方法中的某一个，那么这个方法就会在特殊的情况下被Python所调用，你可以定义自己想要的行为，而这一切都是自动发生的，它们经常是两个下划线包围来命名的（比如`__init___`,`__len__`),Python的魔法方法是非常强大的所以了解其使用方法也变得尤为重要!
+
+`__init__`构造器，当一个实例被创建的时候初始化的方法，但是它并不是实例化调用的第一个方法。
+
+`__new__`才是实例化对象调用的第一个方法，它只取下cls参数，并把其他参数传给`__init___`.
+
+`___new__`很少使用，但是也有它适合的场景，尤其是当类继承自一个像元祖或者字符串这样不经常改变的类型的时候。
+
+`__call__`让一个类的实例像函数一样被调用
+
+`__getitem__`定义获取容器中指定元素的行为，相当于self[key]
+
+`__getattr__`定义当用户试图访问一个不存在属性的时候的行为。
+
+`__setattr__`定义当一个属性被设置的时候的行为
+
+`__getattribute___`定义当一个属性被访问的时候的行为
+
 ### 92.面向对象中怎么实现只读属性?
+
+将对象私有化，通过共有方法提供一个读取数据的接口
+
+```python
+class person:
+    def __init__(self, x):
+        self.__age = 10
+    def age(self):
+        return self.__age
+t = person(22)
+# t.__age =100
+print(t.age())
+```
+
+最好的方法
+
+```python
+class MyCls(object):
+    __weight = 50
+    
+    @property
+    def weight(self):
+        return self.__weight
+   
+```
+
 ### 93.谈谈你对面向对象的理解？
+
+面向对象是相当于面向过程而言的，面向过程语言是一种基于功能分析的，以算法为中心的程序设计方法，而面向对象是一种基于结构分析的，以数据为中心的程序设计思想。在面向对象语言中有一个很重要的东西，叫做类。面向对象有三大特性：封装、继承、多态。
 
 ## 正则表达式
 ### 94.请写出一段代码用正则匹配出ip？
+
 ### 95.a = “abbbccc”，用正则匹配为abccc,不管有多少b，就出现一次？
+    思路：不管有多少个b替换成一个
+
+    re.sub(r'b+', 'b', a)
 ### 96.Python字符串查找和替换？
-### 97.用Python匹配HTML g tag的时候，<.> 和 <.*?> 有什么区别
+    a、str.find()：正序字符串查找函数
+    函数原型：
+    str.find(substr [,pos_start [,pos_end ] ] )
+    返回str中第一次出现的substr的第一个字母的标号，如果str中没有substr则返回-1，也就是说从左边算起的第一次出现的substr的首字母标号。
+
+    参数说明：
+    str：代表原字符串
+    substr：代表要查找的字符串
+    pos_start：代表查找的开始位置，默认是从下标0开始查找
+    pos_end：代表查找的结束位置
+
+    例子：
+    'aabbcc.find('bb')' # 2
+
+    b、str.index()：正序字符串查找函数
+    index()函数类似于find()函数，在Python中也是在字符串中查找子串第一次出现的位置，跟find()不同的是，未找到则抛出异常。
+
+    函数原型：
+    str.index(substr [, pos_start, [ pos_end ] ] )
+
+    参数说明：
+    str：代表原字符串
+    substr：代表要查找的字符串
+    pos_start：代表查找的开始位置，默认是从下标0开始查找
+    pos_end：代表查找的结束位置
+
+    例子：
+    'acdd l1 23'.index(' ') # 4
+
+    c、str.rfind()：倒序字符串查找函数
+
+    函数原型：
+    str.rfind( substr [, pos_start [,pos_ end ] ])
+    返回str中最后出现的substr的第一个字母的标号，如果str中没有substr则返回-1，也就是说从右边算起的第一次出现的substr的首字母标号。
+
+    参数说明：
+    str：代表原字符串
+    substr：代表要查找的字符串
+    pos_start：代表查找的开始位置，默认是从下标0开始查找
+    pos_end：代表查找的结束位置
+
+    例子：
+    'adsfddf'.rfind('d') # 5
+
+    d、str.rindex()：倒序字符串查找函数
+    rindex()函数类似于rfind()函数，在Python中也是在字符串中倒序查找子串最后一次出现的位置，跟rfind()不同的是，未找到则抛出异常。
+
+    函数原型：
+    str.rindex(substr [, pos_start, [ pos_end ] ] )
+
+    参数说明：
+    str：代表原字符串
+    substr：代表要查找的字符串
+    pos_start：代表查找的开始位置，默认是从下标0开始查找
+    pos_end：代表查找的结束位置
+
+    例子：
+     'adsfddf'.rindex('d') # 5
+
+    e、使用re模块进行查找和替换：
+函数 | 说明
+---|---
+re.match(pat, s) | 只从字符串s的头开始匹配，比如(‘123’, ‘12345’)匹配上了，而(‘123’,’01234’)就是没有匹配上，没有匹配上返回None，匹配上返回matchobject
+re.search(pat, s) | 从字符串s的任意位置都进行匹配，比如(‘123’,’01234’)就是匹配上了，只要s只能存在符合pat的连续字符串就算匹配上了，没有匹配上返回None，匹配上返回matchobject
+re.sub(pat,newpat,s) | re.sub(pat,newpat,s)	对字符串中s的包含的所有符合pat的连续字符串进行替换，如果newpat为str,那么就是替换为newpat,如果newpat是函数，那么就按照函数返回值替换。sub函数两个有默认值的参数分别是count表示最多只处理前几个匹配的字符串，默认为0表示全部处理；最后一个是flags，默认为0
+
+    f、使用replace()进行替换：
+    基本用法：对象.replace(rgExp,replaceText,max)
+
+    其中，rgExp和replaceText是必须要有的，max是可选的参数，可以不加。
+    rgExp是指正则表达式模式或可用标志的正则表达式对象，也可以是 String 对象或文字；
+    replaceText是一个String 对象或字符串文字；
+    max是一个数字。
+    对于一个对象，在对象的每个rgExp都替换成replaceText，从左到右最多max次。
+
+    s1='hello world'
+    s1.replace('world','liming')
+
+### 97.用Python匹配HTML tag的时候，<.*> 和 <.*?> 有什么区别
+    第一个代表贪心匹配，第二个代表非贪心；
+    ?在一般正则表达式里的语法是指的"零次或一次匹配左边的字符或表达式"相当于{0,1}
+    而当?后缀于*,+,?,{n},{n,},{n,m}之后，则代表非贪心匹配模式，也就是说，尽可能少的匹配左边的字符或表达式，这里是尽可能少的匹配.(任意字符)
+
+    所以：第一种写法是，尽可能多的匹配，就是匹配到的字符串尽量长，第二中写法是尽可能少的匹配，就是匹配到的字符串尽量短。
+    比如<tag>tag>tag>end，第一个会匹配<tag>tag>tag>,第二个会匹配<tag>。
 ### 98.正则表达式贪婪与非贪婪模式的区别？
+    贪婪模式：
+    定义：正则表达式去匹配时，会尽量多的匹配符合条件的内容
+    标识符：+，?，*，{n}，{n,}，{n,m}
+    匹配时，如果遇到上述标识符，代表是贪婪匹配，会尽可能多的去匹配内容
+
+    非贪婪模式：
+    定义：正则表达式去匹配时，会尽量少的匹配符合条件的内容 也就是说，一旦发现匹配符合要求，立马就匹配成功，而不会继续匹配下去(除非有g，开启下一组匹配)
+    标识符：+?，??，*?，{n}?，{n,}?，{n,m}?
+    可以看到，非贪婪模式的标识符很有规律，就是贪婪模式的标识符后面加上一个?
+
+    参考文章：https://dailc.github.io/2017/07/06/regularExpressionGreedyAndLazy.html
+
 ### 99.写出开头匹配字母和下划线，末尾是数字的正则表达式？
+    s1='_aai0efe00'
+    res=re.findall('^[a-zA-Z_]?[a-zA-Z0-9_]{1,}\d$',s1)
+    print(res)
+
 ### 100.正则表达式操作
 ### 101.请匹配出变量A 中的json字符串。
 ### 102.怎么过滤评论中的表情？
+    思路：主要是匹配表情包的范围，将表情包的范围用空替换掉
+```
+import re
+pattern = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
+pattern.sub('',text)
+
+```
 ### 103.简述Python里面search和match的区别
+    match()函数只检测字符串开头位置是否匹配，匹配成功才会返回结果，否则返回None；
+    search()函数会在整个字符串内查找模式匹配,只到找到第一个匹配然后返回一个包含匹配信息的对象,该对象可以通过调用group()方法得到匹配的字符串,如果字符串没有匹配，则返回None。
+
 ### 104.请写出匹配ip的Python正则表达式
 ### 105.Python里match与search的区别？
+    见103题
 
 ## 系统编程
 ### 106.进程总结
@@ -1433,7 +2010,7 @@ if __name__=='__main___':
 ### 113.什么是死锁？
 若干子线程在系统资源竞争时，都在等待对方对某部分资源解除占用状态，结果是谁也不愿先解锁，互相干等着，程序无法执行下去，这就是死锁。
 
-GIL锁 全局解释器锁（只在cython里才有）
+GIL锁 全局解释器锁
 
 作用： 限制多线程同时执行，保证同一时间只有一个线程执行，所以cython里的多线程其实是伪多线程！
 
@@ -1508,6 +2085,8 @@ asyncio这个库就是使用python的yield这个可以打断保存当前函数�
 ### 123.怎么实现强行关闭客户端和服务器之间的连接?
 ### 124.简述TCP和UDP的区别以及优缺点?
 ### 125.简述浏览器通过WSGI请求动态资源的过程?
+浏览器发送的请求被Nginx监听到，Nginx根据请求的URL的PATH或者后缀把请求静态资源的分发到静态资源的目录，别的请求根据配置好的转发到相应端口。
+实现了WSGI的程序会监听某个端口，监听到Nginx转发过来的请求接收后(一般用socket的recv来接收HTTP的报文)以后把请求的报文封装成`environ`的字典对象，然后再提供一个`start_response`的方法。把这两个对象当成参数传入某个方法比如`wsgi_app(environ, start_response)`或者实现了`__call__(self, environ, start_response)`方法的某个实例。这个实例再调用`start_response`返回给实现了WSGI的中间件，再由中间件返回给Nginx。
 ### 126.描述用浏览器访问www.baidu.com的过程
 ### 127.Post和Get请求的区别?
 ### 128.cookie 和session 的区别？
@@ -1628,7 +2207,7 @@ Session 和Cookie的区别
 
   这里我想先谈谈session与cookies,因为这两个技术是做为开发最为常见的。那么session与cookies的区别是什么？个人认为session与cookies最核心区别在于额外信息由谁来维护。利用cookies来实现会话管理时，用户的相关信息或者其他我们想要保持在每个请求中的信息，都是放在cookies中,而cookies是由客户端来保存，每当客户端发出新请求时，就会稍带上cookies,服务端会根据其中的信息进行操作。
   当利用session来进行会话管理时，客户端实际上只存了一个由服务端发送的session_id,而由这个session_id,可以在服务端还原出所需要的所有状态信息，从这里可以看出这部分信息是由服务端来维护的。
-  
+
 除此以外，session与cookies都有一些自己的缺点：
     
 cookies的安全性不好，攻击者可以通过获取本地cookies进行欺骗或者利用cookies进行CSRF攻击。使用cookies时,在多个域名下，会存在跨域问题。
@@ -1809,8 +2388,31 @@ Session采用的是在服务器端保持状态的方案，而Cookie采用的是�
 ## 爬虫
 ### 159.试列出至少三种目前流行的大型数据库
 ### 160.列举您使用过的Python网络爬虫所用到的网络数据包?
+
+requests, urllib,urllib2, httplib2
+
 ### 161.爬取数据后使用哪个数据库存储数据的，为什么？
+
 ### 162.你用过的爬虫框架或者模块有哪些？优缺点？
+
+Python自带：urllib,urllib2
+
+第三方：requests
+
+框架： Scrapy
+
+urllib 和urllib2模块都做与请求URL相关的操作，但他们提供不同的功能。
+
+urllib2: urllib2.urlopen可以接受一个Request对象或者url,(在接受Request对象时，并以此可以来设置一个URL的headers),urllib.urlopen只接收一个url。
+
+urllib 有urlencode,urllib2没有，因此总是urllib, urllib2常会一起使用的原因
+
+scrapy是封装起来的框架，他包含了下载器，解析器，日志及异常处理，基于多线程，twisted的方式处理，对于固定单个网站的爬取开发，有优势，但是对于多网站爬取100个网站，并发及分布式处理不够灵活，不便调整与扩展
+
+requests是一个HTTP库，它只是用来请求，它是一个强大的库，下载，解析全部自己处理，灵活性高
+
+Scrapy优点：异步，xpath，强大的统计和log系统，支持不同url。shell方便独立调试。写middleware方便过滤。通过管道存入数据库
+
 ### 163.写爬虫是用多进程好？还是多线程好？
 ### 164.常见的反爬虫和应对方法？
 ### 165.解析网页的解析器使用最多的是哪几个?
@@ -1850,9 +2452,49 @@ Session采用的是在服务器端保持状态的方案，而Cookie采用的是�
 # 数据库
 ## MySQL
 ### 198.主键 超键 候选键 外键
+
+主键：数据库表中对存储数据对象予以唯一和完整标识的数据列或属性的组合。一个数据列只能有一个主键，且主键的取值不能缺失，即不能为空值(Null).
+
+超键：在关系中能唯一标识元组的属性集称为关系模式的超键。一个属性可以作为一个超键，多个属性组合在一起也可以作为一个超键。超键包含候选键和主键。
+
+候选键：是最小超键，即没有冗余元素的超键。
+
+外键：在一个表中存在的另一个表的主键称此表的外键。
+
 ### 199.视图的作用，视图可以更改么？
+
+视图是虚拟的表，与包含数据的表不一样，视图只包含使用时动态检索数据的查询;不包含任何列或数据。使用视图可以简化复杂的sql操作，隐藏具体的细节，保护数据;视图创建后，可以使用与表相同的方式利用它们。
+
+视图不能被索引，也不能有关联的触发器或默认值，如果视图本身内有order by则对视图再次order by将被覆盖。
+
+创建视图： create view xxx as xxxxxx
+
+对于某些视图比如未使用联结子查询分组聚集函数Distinct Union等，是可以对其更新的，对视图的更新将对基表进行更新;但是视图主要用于简化检索，保护数据，并不用于更新，而且大部分视图都不可以更新。
+
 ### 200.drop,delete与truncate的区别
+
+drop直接删掉表，truncate删除表中数据，再插入时自增长id又从1开始，delete删除表中数据，可以加where字句。
+
+1.delete 语句执行删除的过程是每次从表中删除一行，并且同时将该行的删除操作作为事务记录在日志中保存以便进行回滚操作。truncate table则一次性地从表中删除所有的数据并不把单独的删除操作记录记入日志保存，删除行是不能恢复的。并且在删除的过程中不会激活与表有关的删除触发器，执行速度快。
+
+2.表和索引所占空间。当表被truncate后，这个表和索引所占用的空间会恢复到初始大小，而delete操作不会减少表或索引所占用的空间。drop语句将表所占用的空间全释放掉。
+
+3.一般而言，drop>truncate>delete
+
+4.应用范围。truncate只能对table，delete可以是table和view
+
+5.truncate和delete只删除数据，而drop则删除整个表（结构和数据)
+
+6.truncate与不带where的delete:只删除数据，而不删除表的结构（定义）drop语句将删除表的结构被依赖的约束(constrain),触发器（trigger)索引(index);依赖于该表的存储过程/函数将被保留，但其状态会变为:invalid.
+
 ### 201.索引的工作原理及其种类
+
+数据库索引，是数据库管理系统中一个排序的数据结构，以协助快速查询，更新数据库表中数据。索引的实现通常使用B树以其变种B+树。
+
+在数据之外，数据库系统还维护着满足特定查找算法的数据结构，这些数据结构以某种方式引用（指向）数据，这样就可以在这些数据结构上实现高级查找算法。这种数据结构，就是索引。
+
+为表设置索引要付出代价的：一是增加了数据库的存储空间，二是在插入和修改数据时要花费较多的时间（因为索引也要随之变动）
+
 ### 202.连接的种类
 ### 203.数据库优化的思路
 ### 204.存储过程与触发器的区别
@@ -1861,9 +2503,66 @@ Session采用的是在服务器端保持状态的方案，而Cookie采用的是�
 
 ## Redis
 ### 207.Redis宕机怎么解决?
+
+宕机:服务器停止服务‘
+
+如果只有一台redis，肯定 会造成数据丢失，无法挽救
+
+多台redis或者是redis集群，宕机则需要分为在主从模式下区分来看：
+
+slave从redis宕机，配置主从复制的时候才配置从的redis，从的会从主的redis中读取主的redis的操作日志1，在redis中从库重新启动后会自动加入到主从架构中，自动完成同步数据;
+
+2, 如果从数据库实现了持久化，此时千万不要立马重启服务，否则可能会造成数据丢失，正确的操作如下：在slave数据上执行SLAVEOF ON ONE,来断开主从关系并把slave升级为主库，此时重新启动主数据库，执行SLAVEOF，把它设置为从库，连接到主的redis上面做主从复制，自动备份数据。
+
+以上过程很容易配置错误，可以使用redis提供的哨兵机制来简化上面的操作。简单的方法:redis的哨兵(sentinel)的功能
+
 ### 208.redis和mecached的区别，以及使用场景
+
+区别
+
+1、redis和Memcache都是将数据存放在内存中，都是内存数据库。不过memcache还可以用于缓存其他东西，例如图片，视频等等
+
+2、Redis不仅仅支持简单的k/v类型的数据，同时还提供list,set,hash等数据结构的存储
+
+3、虚拟内存-redis当物流内存用完时，可以将一些很久没用的value交换到磁盘
+
+4、过期策略-memcache在set时就指定，例如set key1 0 0 8，即永不过期。Redis可以通过例如expire设定，例如expire name 10
+
+5、分布式-设定memcache集群，利用magent做一主多从，redis可以做一主多从。都可以一主一丛
+
+6、存储数据安全-memcache挂掉后，数据没了，redis可以定期保存到磁盘(持久化)
+
+7、灾难恢复-memcache挂掉后，数据不可恢复，redis数据丢失后可以通过aof恢复
+
+8、Redis支持数据的备份，即master-slave模式的数据备份
+
+9、应用场景不一样，redis除了作为NoSQL数据库使用外，还能用做消息队列，数据堆栈和数据缓存等;Memcache适合于缓存SQL语句，数据集，用户临时性数据，延迟查询数据和session等
+
+使用场景
+
+1,如果有持久方面的需求或对数据类型和处理有要求的应该选择redis
+
+2,如果简单的key/value存储应该选择memcached.
+
 ### 209.Redis集群方案该怎么做?都有哪些方案?
+
+1,codis
+
+目前用的最多的集群方案，基本和twemproxy一致的效果，但它支持在节点数量改变情况下，旧节点数据客恢复到新hash节点
+
+2redis cluster3.0自带的集群，特点在于他的分布式算法不是一致性hash，而是hash槽的概念，以及自身支持节点设置从节点。具体看官方介绍
+
+3.在业务代码层实现，起几个毫无关联的redis实例，在代码层，对key进行hash计算，然后去对应的redis实例操作数据。这种方式对hash层代码要求比较高，考虑部分包括，节点失效后的替代算法方案，数据震荡后的字典脚本恢复，实例的监控，等等
+
 ### 210.Redis回收进程是如何工作的
+
+一个客户端运行了新的命令，添加了新的数据。
+
+redis检查内存使用情况，如果大于maxmemory的限制，则根据设定好的策略进行回收。
+
+一个新的命令被执行等等，所以我们不断地穿越内存限制的边界，通过不断达到边界然后不断回收回到边界以下。
+
+如果一个命令的结果导致大量内存被使用(例如很大的集合的交集保存到一个新的键)，不用多久内存限制就会被这个内存使用量超越。
 
 ## MongoDB
 ### 211.MongoDB中对多条记录做更新操作命令是什么？
@@ -1892,9 +2591,191 @@ Session采用的是在服务器端保持状态的方案，而Cookie采用的是�
 ### 230.如何判断单向链表中是否有环？
 ### 231.你知道哪些排序算法（一般是通过问题考算法）
 ### 232.斐波那契数列
+
+**数列定义: **
+
+f 0 = f 1 = 1
+f n = f (n-1) + f (n-2)
+
+#### 根据定义
+
+速度很慢，另外(暴栈注意！⚠️️） `O(fibonacci n)`
+
+```python
+def fibonacci(n):
+    if n == 0 or n == 1:
+        return 1
+    return fibonacci(n - 1) + fibonacci(n - 2)
+```
+
+#### 线性时间的
+
+**状态/循环**
+
+```python
+def fibonacci(n):
+   a, b = 1, 1
+   for _ in range(n):
+       a, b = b, a + b
+   return a
+```
+
+**递归**
+
+```python
+def fibonacci(n):
+    def fib(n_, s):
+        if n_ == 0:
+            return s[0]
+        a, b = s
+        return fib(n_ - 1, (b, a + b))
+    return fib(n, (1, 1))
+```
+
+**map(zipwith)**
+
+```python
+def fibs():
+    yield 1
+    fibs_ = fibs()
+    yield next(fibs_)
+    fibs__ = fibs()
+    for fib in map(lambad a, b: a + b, fibs_, fibs__):
+        yield fib
+        
+        
+def fibonacci(n):
+    fibs_ = fibs()
+    for _ in range(n):
+        next(fibs_)
+    return next(fibs)
+```
+
+**做缓存**
+
+```python
+def cache(fn):
+    cached = {}
+    def wrapper(*args):
+        if args not in cached:
+            cached[args] = fn(*args)
+        return cached[args]
+    wrapper.__name__ = fn.__name__
+    return wrapper
+
+@cache
+def fib(n):
+    if n < 2:
+        return 1
+    return fib(n-1) + fib(n-2)
+```
+
+**利用 funtools.lru_cache 做缓存**
+
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=32)
+def fib(n):
+    if n < 2:
+        return 1
+    return fib(n-1) + fib(n-2)
+```
+
+#### Logarithmic
+
+**矩阵**
+
+```python
+import numpy as np
+def fibonacci(n):
+    return (np.matrix([[0, 1], [1, 1]]) ** n)[1, 1]
+```
+
+**不是矩阵**
+
+```python
+def fibonacci(n):
+    def fib(n):
+        if n == 0:
+            return (1, 1)
+        elif n == 1:
+            return (1, 2)
+        a, b = fib(n // 2 - 1)
+        c = a + b
+        if n % 2 == 0:
+            return (a * a + b * b, c * c - a * a)
+        return (c * c - a * a, b * b + c * c)
+    return fib(n)[0]
+```
+
 ### 233.如何翻转一个单链表？
+
+```python
+class Node:
+    def __init__(self,data=None,next=None):
+        self.data = data
+        self.next = next
+        
+def rev(link):
+    pre = link
+    cur = link.next
+    pre.next = None
+    while cur:
+        temp  = cur.next
+        cur.next = pre
+        pre = cur
+        cur = tmp
+    return pre
+
+if __name__ == '__main__':
+    link = Node(1,Node(2,Node(3,Node(4,Node(5,Node(6,Node7,Node(8.Node(9))))))))
+    root = rev(link)
+    while root:
+        print(roo.data)
+        root = root.next
+```
+
+
+
 ### 234.青蛙跳台阶问题
+
+一只青蛙要跳上n层高的台阶，一次能跳一级，也可以跳两级，请问这只青蛙有多少种跳上这个n层台阶的方法？
+
+方法1：递归
+
+设青蛙跳上n级台阶有f(n)种方法，把这n种方法分为两大类，第一种最后一次跳了一级台阶，这类共有f(n-1)种，第二种最后一次跳了两级台阶，这种方法共有f(n-2)种，则得出递推公式f(n)=f(n-1) + f(n-2),显然f(1)=1,f(2)=2，这种方法虽然代码简单，但效率低，会超出时间上限
+
+```python
+class Solution:
+    def climbStairs(self,n):
+        if n ==1:
+            return 1
+        elif n==2:
+            return 2
+        else:
+            return self.climbStairs(n-1) + self.climbStairs(n-2)
+```
+
+方法2：用循环来代替递归
+
+```python
+class Solution:
+    def climbStairs(self,n):
+        if n==1 or n==2:
+            return n
+        a,b,c = 1,2,3
+        for i in range(3,n+1):
+            c = a+b
+            a = b
+            b = c
+        return c
+```
+
 ### 235.两数之和 Two Sum
+
+
+
 ### 236.搜索旋转排序数组 Search in Rotated Sorted Array
 ### 237.Python实现一个Stack的数据结构
 ### 238.写一个二分查找
@@ -1906,3 +2787,9 @@ Session采用的是在服务器端保持状态的方案，而Cookie采用的是�
 ### 243.一个大约有一万行的文本文件统计高频词
 ### 244.怎么在海量数据中找出重复次数最多的一个？
 ### 245.判断数据是否在大量数据中
+
+## 架构
+
+### [Python后端架构演进](<https://zhu327.github.io/2018/07/19/python%E5%90%8E%E7%AB%AF%E6%9E%B6%E6%9E%84%E6%BC%94%E8%BF%9B/>)
+
+这篇文章几乎涵盖了python会用的架构，在面试可以手画架构图，根据自己的项目谈下技术选型和优劣，遇到的坑等。绝对加分
